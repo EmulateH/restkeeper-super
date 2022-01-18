@@ -114,48 +114,18 @@ public class AppletFaceImpl implements AppletFace {
     public AppletInfoVo findAppletInfoVoByTableId(Long tableId)throws ProjectException {
         try {
             //1、查询桌台信息
-            Table table = tableService.getById(tableId);
-            TableVo tableVo = BeanConv.toBean(table, TableVo.class);
             //2、查询门店
-            Store store = storeService.getById(table.getStoreId());
-            StoreVo storeVo = BeanConv.toBean(store, StoreVo.class);
             //3、查询品牌
-            Brand brand = brandService.getById(store.getBrandId());
-            BrandVo brandVo = BeanConv.toBean(brand, BrandVo.class);
             //3.1、处理品牌图片
-            List<AffixVo> affixVoListBrand = affixFace.findAffixVoByBusinessId(brandVo.getId());
-            brandVo.setAffixVo(affixVoListBrand.get(0));
             //4、查询分类
-            List<Category> categorys = categoryService.findCategoryVoByStoreId(table.getStoreId());
-            List<CategoryVo> categoryVoList = BeanConv.toBeanList(categorys, CategoryVo.class);
             //5、查询菜品
-            List<Dish> dishs = dishService.findDishVoByStoreId(table.getStoreId());
-            List<DishVo> dishVos = BeanConv.toBeanList(dishs, DishVo.class);
             //6、查询菜品口味、图片信息
-            dishVos.forEach(dishVo->{
                 //6.1、口味与数字字典中间表信息
-                List<DishFlavor> dishFlavors = dishFlavorService.findDishFlavorByDishId(dishVo.getId());
-                List<DishFlavorVo> dishFlavorVos = BeanConv.toBeanList(dishFlavors, DishFlavorVo.class);
-                dishVo.setDishFlavorVos(dishFlavorVos);
                 //6.2、构建数字字典dataKeys
-                List<String> dataKeys = dishFlavorVos.stream()
-                        .map(DishFlavorVo::getDataKey).collect(Collectors.toList());
                 //6.3、RPC查询数字字典口味信息
-                List<DataDictVo> valueByDataKeys = dataDictFace.findValueByDataKeys(dataKeys);
-                dishVo.setDataDictVos(valueByDataKeys);
                 //6.4、RPC查询附件信息
-                List<AffixVo> affixVoListDish = affixFace.findAffixVoByBusinessId(dishVo.getId());
-                dishVo.setAffixVo(affixVoListDish.get(0));
-            });
             //7、构建返回对象
-            AppletInfoVo appletInfoVo = AppletInfoVo.builder()
-                    .tableVo(tableVo)
-                    .storeVo(storeVo)
-                    .brandVo(brandVo)
-                    .categoryVos(categoryVoList)
-                    .dishVos(dishVos)
-                    .build();
-            return appletInfoVo;
+            return null;
         } catch (Exception e) {
             log.error("查询桌台相关主体信息异常：{}", ExceptionsUtil.getStackTraceAsString(e));
             throw new ProjectException(TableEnum.SELECT_TABLE_FAIL);
@@ -165,53 +135,19 @@ public class AppletFaceImpl implements AppletFace {
     @Override
     @Transactional
     public OrderVo openTable(Long tableId,Integer personNumbers) throws ProjectException {
+        try{
         //1、开台状态定义
-        boolean flag = true;
         //2、锁定桌台，防止并发重复创建订单
-        String key = AppletCacheConstant.OPEN_TABLE_LOCK+tableId;
-        RLock lock = redissonClient.getLock(key);
-        try {
-            if(lock.tryLock(AppletCacheConstant.REDIS_WAIT_TIME,
-                    AppletCacheConstant.REDIS_LEASETIME,
-                    TimeUnit.SECONDS)){
                 //3、幂等性：再次查询桌台订单情况
-                OrderVo orderVoResult = orderService.findOrderByTableId(tableId);
                 //4、未开台,为桌台创建当订单
-                if (EmptyUtil.isNullOrEmpty(orderVoResult)){
                     //4.1、查询桌台信息
-                    Table table = tableService.getById(tableId);
                     //4.2、构建订单
-                    Order order = Order.builder()
-                            .tableId(tableId)
-                            .tableName(table.getTableName())
-                            .storeId(table.getStoreId())
-                            .areaId(table.getAreaId())
-                            .enterpriseId(table.getEnterpriseId())
-                            .orderNo((Long) identifierGenerator.nextId(tableId))
-                            .orderState(TradingConstant.DFK)
-                            .isRefund(SuperConstant.NO)
-                            .refund(new BigDecimal(0))
-                            .discount(new BigDecimal(10))
-                            .personNumbers(personNumbers)
-                            .reduce(new BigDecimal(0))
-                            .useScore(0)
-                            .acquireScore(0l)
-                            .build();
-                    orderService.save(order);
                     //5、修改桌台状态为使用中
-                    TableVo tableVo = TableVo.builder()
-                            .id(tableId)
-                            .tableStatus(SuperConstant.USE).build();
-                    tableService.updateTable(tableVo);
-                }
-            }
             //6、订单处理：处理可核算订单项和购物车订单项，可调用桌台订单显示接口
-            return showOrderVoforTable(tableId);
+            return null;
         }catch (Exception e){
             log.error("开桌操作异常：{}", ExceptionsUtil.getStackTraceAsString(e));
             throw new ProjectException(TableEnum.OPEN_TABLE_FAIL);
-        }finally {
-            lock.unlock();
         }
     }
 

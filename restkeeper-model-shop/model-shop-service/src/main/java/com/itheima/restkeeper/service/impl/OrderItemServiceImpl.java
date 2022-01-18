@@ -37,6 +37,6 @@ public class OrderItemServiceImpl extends ServiceImpl<OrderItemMapper, OrderItem
     @Override
     public Boolean updateDishNum(Long step,Long dishId,Long orderNo) {
         Integer rows = orderItemMapper.updateDishNum(step,dishId,orderNo);
-        return  rows==1 ? true : false;
+        return rows==1;
     }
 }

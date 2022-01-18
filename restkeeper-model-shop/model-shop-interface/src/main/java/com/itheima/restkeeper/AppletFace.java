@@ -24,7 +24,7 @@ public interface AppletFace {
      * @param tableId 桌台Id
      * @return AppletInfoVo
      */
-    AppletInfoVo findAppletInfoVoByTableId(Long tableId)throws ProjectException;
+    AppletInfoVo findAppletInfoVoByTableId(Long tableId) throws ProjectException;
 
     /***
      * @description 未开桌：选择人数创建订单

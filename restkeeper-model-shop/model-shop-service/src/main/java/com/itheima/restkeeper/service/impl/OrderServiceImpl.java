@@ -31,15 +31,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
     @Override
     public OrderVo findOrderByTableId(Long tableId) {
-        QueryWrapper<Order> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda().eq(Order::getTableId,tableId);
-        queryWrapper.lambda().eq(Order::getEnableFlag,SuperConstant.YES);
-        queryWrapper.lambda().and(wrapper->wrapper
-                .eq(Order::getOrderState, TradingConstant.DFK)
-                .or()
-                .eq(Order::getOrderState,TradingConstant.FKZ));
-        Order order = getOne(queryWrapper);
-        return BeanConv.toBean(order,OrderVo.class);
+        return null;
     }
 
     @Override

@@ -33,8 +33,7 @@ public class AppletController {
     @ApiOperation(value = "查询是否开桌",notes = "是否开桌,已开台：进入继续点餐流程,未开台：进入开台流程")
     @ApiImplicitParam(paramType = "path",name = "tableId",value = "桌台",dataType = "Long")
     public ResponseWrap<Boolean> isOpen(@PathVariable("tableId") Long tableId) {
-        Boolean isOpen = appletFace.isOpen(tableId);
-        return ResponseWrapBuild.build(TableEnum.SUCCEED,isOpen);
+        return null;
     }
 
     @GetMapping("table-appletInfo/{tableId}")
@@ -42,8 +41,7 @@ public class AppletController {
     @ApiImplicitParam(paramType = "path",name = "tableId",value = "桌台Id",dataType = "Long")
     public ResponseWrap<AppletInfoVo> findAppletInfoVoByTableId(@PathVariable("tableId") Long tableId){
         //AppletInfoVo对象包所有相关信息，注意：品牌图片信息、菜品图片口味信息需要调用通用服务获得
-        AppletInfoVo appletInfoVo = appletFace.findAppletInfoVoByTableId(tableId);
-        return ResponseWrapBuild.build(TableEnum.SUCCEED,appletInfoVo);
+        return null;
     }
 
 
@@ -56,16 +54,14 @@ public class AppletController {
     public ResponseWrap<OrderVo> openTable(
         @PathVariable("tableId") Long tableId,
         @PathVariable("personNumbers") Integer personNumbers) {
-        OrderVo orderVoResult = appletFace.openTable(tableId,personNumbers);
-        return ResponseWrapBuild.build(BrandEnum.SUCCEED,orderVoResult);
+        return null;
     }
 
     @PostMapping("show-ordervo-table/{tableId}")
     @ApiOperation(value = "查询桌台订单信息",notes = "已开桌：查询当前桌台订单信息【包括可核算订单项和购物车订单项】")
     @ApiImplicitParam(paramType = "path",name = "tableId",value = "桌台",dataType = "Long")
     public ResponseWrap<OrderVo> showOrderVoforTable(@PathVariable("tableId") Long tableId) {
-        OrderVo orderVoResult = appletFace.showOrderVoforTable(tableId);
-        return ResponseWrapBuild.build(BrandEnum.SUCCEED,orderVoResult);
+        return null;
     }
 
     @PostMapping("dish-details/{dishId}")
@@ -73,9 +69,8 @@ public class AppletController {
     @ApiImplicitParam(paramType = "path",name = "dishId",value = "菜品Id",dataType = "菜品Id")
     public ResponseWrap<DishVo> findDishVoById(@PathVariable("dishId") Long dishId) {
         //查询菜品信息，注意：菜品图片口味信息需要调用通用服务获得
-        DishVo dishVo = appletFace.findDishVoById(dishId);
         //封装返回结果
-        return ResponseWrapBuild.build(BrandEnum.SUCCEED,dishVo);
+        return null;
     }
 
     @PostMapping("opertion-shopping-cart/{dishId}/{orderNo}/{dishFlavor}/{opertionType}")
