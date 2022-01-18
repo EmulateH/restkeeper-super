@@ -41,15 +41,9 @@ public class CategoryFaceImpl implements CategoryFace {
                                                int pageSize)throws ProjectException {
         try {
             //查询分类分页
-            Page<Category> page = categoryService.findCategoryVoPage(categoryVo, pageNum, pageSize);
-            Page<CategoryVo> pageVo = new Page<>();
-            BeanConv.toBean(page,pageVo);
             //结果集转换
-            List<Category> categoryList = page.getRecords();
-            List<CategoryVo> categoryVoList = BeanConv.toBeanList(categoryList,CategoryVo.class);
-            pageVo.setRecords(categoryVoList);
             //返回结果
-            return pageVo;
+            return null;
         } catch (Exception e) {
             log.error("查询分类列表异常：{}", ExceptionsUtil.getStackTraceAsString(e));
             throw new ProjectException(CategoryEnum.PAGE_FAIL);
@@ -61,7 +55,7 @@ public class CategoryFaceImpl implements CategoryFace {
     public CategoryVo createCategory(CategoryVo categoryVo)throws ProjectException {
         try {
             //创建分类
-            return BeanConv.toBean( categoryService.createCategory(categoryVo), CategoryVo.class);
+            return null;
         } catch (Exception e) {
             log.error("保存分类异常：{}", ExceptionsUtil.getStackTraceAsString(e));
             throw new ProjectException(CategoryEnum.CREATE_FAIL);
@@ -72,7 +66,7 @@ public class CategoryFaceImpl implements CategoryFace {
     public Boolean updateCategory(CategoryVo categoryVo) throws ProjectException{
         try {
             //修改分类
-            return categoryService.updateCategory(categoryVo);
+            return null;
         } catch (Exception e) {
             log.error("保存分类异常：{}", ExceptionsUtil.getStackTraceAsString(e));
             throw new ProjectException(CategoryEnum.UPDATE_FAIL);
@@ -83,7 +77,7 @@ public class CategoryFaceImpl implements CategoryFace {
     public Boolean deleteCategory(String[] checkedIds) {
         try {
             //删除分类
-            return categoryService.deleteCategory(checkedIds);
+            return null;
         } catch (Exception e) {
             log.error("删除分类异常：{}", ExceptionsUtil.getStackTraceAsString(e));
             throw new ProjectException(CategoryEnum.DELETE_FAIL);
@@ -94,10 +88,6 @@ public class CategoryFaceImpl implements CategoryFace {
     public CategoryVo findCategoryByCategoryId(Long categoryId)throws ProjectException {
         try {
             //按分类id查询分类
-            Category category = categoryService.getById(categoryId);
-            if (!EmptyUtil.isNullOrEmpty(category)){
-                return BeanConv.toBean(category,CategoryVo.class);
-            }
             return null;
         } catch (Exception e) {
             log.error("查找分类所有分类异常：{}", ExceptionsUtil.getStackTraceAsString(e));
@@ -109,7 +99,7 @@ public class CategoryFaceImpl implements CategoryFace {
     public List<CategoryVo> findCategoryVoList()throws ProjectException {
         try {
             //查询分类下拉框
-            return BeanConv.toBeanList(categoryService.findCategoryVoList(),CategoryVo.class);
+            return null;
         } catch (Exception e) {
             log.error("查找分类所有分类异常：{}", ExceptionsUtil.getStackTraceAsString(e));
             throw new ProjectException(CategoryEnum.SELECT_CATEGORY_LIST_FAIL);

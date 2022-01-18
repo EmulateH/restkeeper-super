@@ -43,8 +43,7 @@ public class DishController {
         @RequestBody DishVo dishVo,
         @PathVariable("pageNum") int pageNum,
         @PathVariable("pageSize") int pageSize) {
-        Page<DishVo> dishVoPage = dishFace.findDishVoPage(dishVo, pageNum, pageSize);
-        return ResponseWrapBuild.build(DishEnum.SUCCEED,dishVoPage);
+        return null;
     }
 
     /**
@@ -56,8 +55,7 @@ public class DishController {
     @ApiOperation(value = "添加菜品",notes = "添加菜品")
     @ApiImplicitParam(name = "dishVo",value = "菜品对象",required = true,dataType = "DishVo")
     ResponseWrap<DishVo> createDish(@RequestBody DishVo dishVo) {
-        DishVo dishVoResult = dishFace.createDish(dishVo);
-        return ResponseWrapBuild.build(DishEnum.SUCCEED,dishVoResult);
+        return null;
     }
 
     /**
@@ -69,8 +67,7 @@ public class DishController {
     @ApiOperation(value = "修改菜品",notes = "修改菜品")
     @ApiImplicitParam(name = "dishVo",value = "菜品对象",required = true,dataType = "DishVo")
     ResponseWrap<Boolean> updateDish(@RequestBody DishVo dishVo) {
-        Boolean flag = dishFace.updateDish(dishVo);
-        return ResponseWrapBuild.build(DishEnum.SUCCEED,flag);
+        return null;
     }
 
     /**
@@ -83,9 +80,7 @@ public class DishController {
     @ApiImplicitParam(name = "dishVo",value = "菜品查询对象",required = true,dataType = "DishVo")
     ResponseWrap<Boolean> deleteDish(@RequestBody DishVo dishVo ) {
         //获得所有选中的菜品IDS
-        String[] checkedIds = dishVo.getCheckedIds();
-        Boolean flag = dishFace.deleteDish(checkedIds);
-        return ResponseWrapBuild.build(DishEnum.SUCCEED,flag);
+        return null;
     }
 
     /**
@@ -97,22 +92,19 @@ public class DishController {
     @ApiOperation(value = "查找菜品",notes = "查找菜品")
     @ApiImplicitParam(paramType = "path",name = "dishId",value = "菜品Id",dataType = "Long")
     ResponseWrap<DishVo> findDishByDishId(@PathVariable("dishId") Long dishId) {
-        DishVo dishVo = dishFace.findDishByDishId(dishId);
-        return ResponseWrapBuild.build(DishEnum.SUCCEED,dishVo);
+        return null;
     }
 
     @PostMapping("update-dish-enableFlag")
     @ApiOperation(value = "修改菜品有效状态",notes = "修改菜品有效状态")
     ResponseWrap<Boolean> updateDishEnableFlag(@RequestBody DishVo dishVo) {
-        Boolean flag = dishFace.updateDish(dishVo);
-        return ResponseWrapBuild.build(DishEnum.SUCCEED,flag);
+        return null;
     }
 
     @PostMapping("update-dish-dishStatus")
     @ApiOperation(value = "修改菜品状态",notes = "修改菜品状态")
     ResponseWrap<Boolean> updateDishDishStatus(@RequestBody DishVo dishVo) {
-        Boolean flag = dishFace.updateDish(dishVo);
-        return ResponseWrapBuild.build(DishEnum.SUCCEED,flag);
+        return null;
     }
 
 }

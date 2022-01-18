@@ -48,8 +48,7 @@ public class TableController {
         @RequestBody TableVo tableVo,
         @PathVariable("pageNum") int pageNum,
         @PathVariable("pageSize") int pageSize) {
-        Page<TableVo> tableVoList = tableFace.findTableVoPage(tableVo,pageNum,pageSize);
-        return ResponseWrapBuild.build(TableEnum.SUCCEED,tableVoList);
+        return null;
     }
 
     /**
@@ -61,8 +60,7 @@ public class TableController {
     @ApiOperation(value = "添加桌台",notes = "添加桌台")
     @ApiImplicitParam(name = "tableVo",value = "桌台对象",required = true,dataType = "TableVo")
     ResponseWrap<TableVo> createTable(@RequestBody TableVo tableVo) {
-        TableVo tableVoResult = tableFace.createTable(tableVo);
-        return ResponseWrapBuild.build(TableEnum.SUCCEED,tableVoResult);
+        return null;
     }
 
     /**
@@ -74,8 +72,7 @@ public class TableController {
     @ApiOperation(value = "修改桌台",notes = "修改桌台")
     @ApiImplicitParam(name = "tableVo",value = "桌台对象",required = true,dataType = "TableVo")
     ResponseWrap<Boolean> updateTable(@RequestBody TableVo tableVo) {
-        Boolean flag = tableFace.updateTable(tableVo);
-        return ResponseWrapBuild.build(TableEnum.SUCCEED,flag);
+        return null;
     }
 
     /**
@@ -87,8 +84,7 @@ public class TableController {
     @ApiOperation(value = "查找桌台",notes = "查找桌台")
     @ApiImplicitParam(paramType = "path",name = "tableId",value = "桌台Id",dataType = "Long")
     ResponseWrap<TableVo> findTableByTableId(@PathVariable("tableId") Long tableId) {
-        TableVo tableVo = tableFace.findTableByTableId(tableId);
-        return ResponseWrapBuild.build(TableEnum.SUCCEED,tableVo);
+        return null;
     }
 
     /**
@@ -101,9 +97,7 @@ public class TableController {
     @ApiImplicitParam(name = "tableVo",value = "桌台查询对象",required = true,dataType = "TableVo")
     ResponseWrap<Boolean> deleteTable(@RequestBody TableVo tableVo ) {
         //拿到选中桌台的IDS
-        String[] checkedIds = tableVo.getCheckedIds();
-        Boolean flag = tableFace.deleteTable(checkedIds);
-        return ResponseWrapBuild.build(TableEnum.SUCCEED,flag);
+        return null;
     }
 
     /**
@@ -113,21 +107,18 @@ public class TableController {
     @GetMapping("list")
     @ApiOperation(value = "查找桌台列表",notes = "查找桌台列表")
     ResponseWrap<List<TableVo>> findTableVoList() {
-        List<TableVo> list = tableFace.findTableVoList();
-        return ResponseWrapBuild.build(TableEnum.SUCCEED,list);
+        return null;
     }
 
     @PostMapping("update-table-enableFlag")
     @ApiOperation(value = "修改桌台有效状态",notes = "修改桌台有效状态")
     ResponseWrap<Boolean> updateTableEnableFlag(@RequestBody TableVo tableVo) {
-        Boolean flag = tableFace.updateTable(tableVo);
-        return ResponseWrapBuild.build(TableEnum.SUCCEED,flag);
+        return null;
     }
 
     @PostMapping("update-table-tableStatus")
     @ApiOperation(value = "修改桌台状态",notes = "修改桌台状态")
     ResponseWrap<Boolean> updateTableStatus(@RequestBody TableVo tableVo) {
-        Boolean flag = tableFace.updateTable(tableVo);
-        return ResponseWrapBuild.build(TableEnum.SUCCEED,flag);
+        return null;
     }
 }

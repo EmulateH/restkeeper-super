@@ -19,21 +19,5 @@ import java.util.List;
 @Component
 public class InitDish {
 
-    @Autowired
-    IDishService dishService;
 
-    @Autowired
-    RedissonClient redissonClient;
-
-    @PostConstruct
-    public void initDishNumber(){
-        //查询所有有效的且起售状态的菜品
-        List<Dish> dishList = dishService.findDishVos();
-        for (Dish dish : dishList) {
-            //构建初始化库存
-            String key = AppletCacheConstant.REPERTORY_DISH+dish.getId();
-            RAtomicLong atomicLong = redissonClient.getAtomicLong(key);
-            atomicLong.set(dish.getDishNumber());
-        }
-    }
 }

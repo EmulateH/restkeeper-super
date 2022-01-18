@@ -26,75 +26,47 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryMapper, Category> i
     @Override
     public Page<Category> findCategoryVoPage(CategoryVo categoryVo, int pageNum, int pageSize) {
         //构建Page<Category>分页对象
-        Page<Category> page = new Page<>(pageNum,pageSize);
-        QueryWrapper<Category> queryWrapper = new QueryWrapper<>();
         //按分类类型查询
-        if (!EmptyUtil.isNullOrEmpty(categoryVo.getCategoryType())) {
-            queryWrapper.lambda().eq(Category::getCategoryType,categoryVo.getCategoryType());
-        }
         //按分类名称查询
-        if (!EmptyUtil.isNullOrEmpty(categoryVo.getCategoryName())) {
-            queryWrapper.lambda().likeRight(Category::getCategoryName,categoryVo.getCategoryName());
-        }
         //按分类有效性查询
-        if (!EmptyUtil.isNullOrEmpty(categoryVo.getEnableFlag())) {
-            queryWrapper.lambda().eq(Category::getEnableFlag,categoryVo.getEnableFlag());
-        }
         //按sortNo升序排列
-        queryWrapper.lambda().orderByAsc(Category::getSortNo);
         //执行page查询返回结果
-        return page(page, queryWrapper);
+        return null;
     }
 
     @Override
     public Category createCategory(CategoryVo categoryVo) {
         //转换CategoryVo为Category
-        Category category = BeanConv.toBean(categoryVo, Category.class);
         //执行保存
-        boolean flag = save(category);
-        if (flag){
-            return category;
-        }
         return null;
     }
 
     @Override
     public Boolean updateCategory(CategoryVo categoryVo) {
         //转换CategoryVo为Category
-        Category category = BeanConv.toBean(categoryVo, Category.class);
         //执行updateById修改
-        return updateById(category);
+        return null;
     }
 
     @Override
     public Boolean deleteCategory(String[] checkedIds) {
         //构建选中ids的List<String>
-        List<String> ids = Arrays.asList(checkedIds);
-        List<Long> idsLong = new ArrayList<>();
-        ids.forEach(n->{
-            idsLong.add(Long.valueOf(n));
-        });
         //执行removeByIds批量移除
-        return removeByIds(idsLong);
+        return null;
     }
 
     @Override
     public List<Category> findCategoryVoList() {
         //构建查询条件：SuperConstant.YES
-        QueryWrapper<Category> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda().eq(BasicPojo::getEnableFlag, SuperConstant.YES);
         //执行list查询
-        return list(queryWrapper);
+        return null;
     }
 
     @Override
     public List<Category> findCategoryVoByStoreId(Long storeId) {
         //构建查询条件：SuperConstant.YES
-        QueryWrapper<Category> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda().eq(Category::getStoreId,storeId)
-                .eq(BasicPojo::getEnableFlag, SuperConstant.YES);
         //执行list查询
-        return list(queryWrapper);
+        return null;
     }
 
 }

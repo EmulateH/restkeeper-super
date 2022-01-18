@@ -49,8 +49,7 @@ public class TableAreaController {
         @RequestBody TableAreaVo tableAreaVo,
         @PathVariable("pageNum") int pageNum,
         @PathVariable("pageSize") int pageSize) {
-        Page<TableAreaVo> tableAreaVoPage = tableAreaFace.findTableAreaVoPage(tableAreaVo, pageNum, pageSize);
-        return ResponseWrapBuild.build(TableAreaEnum.SUCCEED,tableAreaVoPage);
+        return null;
     }
 
     /**
@@ -62,8 +61,7 @@ public class TableAreaController {
     @ApiOperation(value = "添加区域",notes = "添加区域")
     @ApiImplicitParam(name = "tableAreaVo",value = "区域对象",required = true,dataType = "TableAreaVo")
     ResponseWrap<TableAreaVo> createTableArea(@RequestBody TableAreaVo tableAreaVo) {
-        TableAreaVo tableAreaVoResult = tableAreaFace.createTableArea(tableAreaVo);
-        return ResponseWrapBuild.build(TableAreaEnum.SUCCEED,tableAreaVoResult);
+        return null;
     }
 
     /**
@@ -75,8 +73,7 @@ public class TableAreaController {
     @ApiOperation(value = "修改区域",notes = "修改区域")
     @ApiImplicitParam(name = "tableAreaVo",value = "区域对象",required = true,dataType = "TableAreaVo")
     ResponseWrap<Boolean> updateTableArea(@RequestBody TableAreaVo tableAreaVo) {
-        Boolean flag = tableAreaFace.updateTableArea(tableAreaVo);
-        return ResponseWrapBuild.build(TableAreaEnum.SUCCEED,flag);
+        return null;
     }
 
     /**
@@ -89,9 +86,7 @@ public class TableAreaController {
     @ApiImplicitParam(name = "tableAreaVo",value = "区域查询对象",required = true,dataType = "TableAreaVo")
     ResponseWrap<Boolean> deleteTableArea(@RequestBody TableAreaVo tableAreaVo ) {
         //获得所有选择的区域IDS
-        String[] checkedIds = tableAreaVo.getCheckedIds();
-        Boolean flag = tableAreaFace.deleteTableArea(checkedIds);
-        return ResponseWrapBuild.build(TableAreaEnum.SUCCEED,flag);
+        return null;
     }
 
     /**
@@ -103,8 +98,7 @@ public class TableAreaController {
     @ApiOperation(value = "查找区域",notes = "查找区域")
     @ApiImplicitParam(paramType = "path",name = "tableAreaId",value = "区域Id",example = "1",dataType = "Long")
     ResponseWrap<TableAreaVo> findTableAreaByTableAreaId(@PathVariable("tableAreaId") Long tableAreaId) {
-        TableAreaVo tableAreaVo = tableAreaFace.findTableAreaByTableAreaId(tableAreaId);
-        return ResponseWrapBuild.build(TableAreaEnum.SUCCEED, tableAreaVo);
+        return null;
     }
 
     /**
@@ -114,14 +108,12 @@ public class TableAreaController {
     @GetMapping("list")
     @ApiOperation(value = "查找区域列表",notes = "查找区域列表")
     ResponseWrap<List<TableAreaVo>> findTableAreaVoList() {
-        List<TableAreaVo> list = tableAreaFace.findTableAreaVoList();
-        return ResponseWrapBuild.build(TableAreaEnum.SUCCEED,list);
+        return null;
     }
 
     @PostMapping("update-tableArea-enableFlag")
     @ApiOperation(value = "修改区域状态",notes = "修改区域状态")
     ResponseWrap<Boolean> updateTableAreaEnableFlag(@RequestBody TableAreaVo tableAreaVo) {
-        Boolean flag = tableAreaFace.updateTableArea(tableAreaVo);
-        return ResponseWrapBuild.build(TableAreaEnum.SUCCEED,flag);
+        return null;
     }
 }
