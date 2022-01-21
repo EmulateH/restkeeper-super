@@ -60,7 +60,7 @@ public class SmsSendFaceImpl implements SmsSendFace {
         MqMessage mqMessage = MqMessage.builder()
                 .id((Long)identifierGenerator.nextId(sendMessageVo))
                 .title("sms-message")
-                .conten(sendMessageVoString)
+                .content(sendMessageVoString)
                 .messageType("sms-request")
                 .produceTime(Timestamp.valueOf(LocalDateTime.now()))
                 .sender(applicationName+":"+port)
