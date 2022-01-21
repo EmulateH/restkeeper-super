@@ -13,12 +13,11 @@
 
     <name>model-basic-producer</name>
     <dependencies>
-
         <dependency>
             <groupId>com.itheima.restkeeper</groupId>
-            <artifactId>framework-stream-rabbitmq</artifactId>
+            <artifactId>framework-stream-binder-rabbitmq</artifactId>
+            <version>1.0-SNAPSHOT</version>
         </dependency>
-
         <dependency>
             <groupId>com.itheima.restkeeper</groupId>
             <artifactId>model-basic-interface</artifactId>
