@@ -12,9 +12,9 @@ import com.itheima.restkeeper.utils.BeanConv;
 import com.itheima.restkeeper.utils.EmptyUtil;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @Description：品牌管理 服务实现类
@@ -68,12 +68,12 @@ public class BrandServiceImpl extends ServiceImpl<BrandMapper, Brand> implements
     @Override
     public Boolean deleteBrand(String[] checkedIds) {
         //转换数组为集合
-        List<String> ids = Arrays.asList(checkedIds);
-        ArrayList<Long> idsLong = new ArrayList<>();
-        ids.forEach(n -> {
-            idsLong.add(Long.valueOf(n));
-        });
-        return removeById(idsLong);
+        List<Long> ids =
+                Stream.of(checkedIds)
+                        .map(Long::valueOf)
+                        //.map(id->Long.valueOf(id))
+                        .collect(Collectors.toList());
+        return removeByIds(ids);
     }
 
     @Override
