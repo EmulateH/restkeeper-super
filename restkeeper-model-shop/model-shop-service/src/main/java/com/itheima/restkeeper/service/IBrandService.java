@@ -44,7 +44,7 @@ public interface IBrandService extends IService<Brand> {
 
     /***
      * @description 查询品牌下拉框
-     * @return: List<BrandVo>
+     * @return: List<Brand>
      */
     List<Brand> findBrandVoList();
 }
