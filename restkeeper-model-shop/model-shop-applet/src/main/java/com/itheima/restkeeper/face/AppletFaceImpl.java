@@ -15,7 +15,6 @@ import com.itheima.restkeeper.service.*;
 import com.itheima.restkeeper.utils.BeanConv;
 import com.itheima.restkeeper.utils.EmptyUtil;
 import com.itheima.restkeeper.utils.ExceptionsUtil;
-import com.itheima.restkeeper.utils.ResponseWrapBuild;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.apache.dubbo.config.annotation.DubboService;
@@ -39,26 +38,26 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @DubboService(version = "${dubbo.application.version}", timeout = 5000,
-    methods = {
-        @Method(name = "isOpen", retries = 2),
-        @Method(name = "findAppletInfoVoByTableId", retries = 2),
-        @Method(name = "openTable", retries = 0),
-        @Method(name = "showOrderVoforTable", retries = 2),
-        @Method(name = "handlerOrderVo", retries = 2),
-        @Method(name = "reducePriceHandler", retries = 2),
-        @Method(name = "findDishVoById", retries = 2),
-        @Method(name = "opertionShoppingCart", retries = 0),
-        @Method(name = "placeOrder", retries = 0),
-        @Method(name = "rotaryTable", retries = 0),
-        @Method(name = "clearShoppingCart",retries = 0)
-    }
+        methods = {
+                @Method(name = "isOpen", retries = 2),
+                @Method(name = "findAppletInfoVoByTableId", retries = 2),
+                @Method(name = "openTable", retries = 0),
+                @Method(name = "showOrderVoforTable", retries = 2),
+                @Method(name = "handlerOrderVo", retries = 2),
+                @Method(name = "reducePriceHandler", retries = 2),
+                @Method(name = "findDishVoById", retries = 2),
+                @Method(name = "opertionShoppingCart", retries = 0),
+                @Method(name = "placeOrder", retries = 0),
+                @Method(name = "rotaryTable", retries = 0),
+                @Method(name = "clearShoppingCart", retries = 0)
+        }
 )
 public class AppletFaceImpl implements AppletFace {
 
-    @DubboReference(version = "${dubbo.application.version}",check = false)
+    @DubboReference(version = "${dubbo.application.version}", check = false)
     AffixFace affixFace;
 
-    @DubboReference(version = "${dubbo.application.version}",check = false)
+    @DubboReference(version = "${dubbo.application.version}", check = false)
     DataDictFace dataDictFace;
 
     @Autowired
@@ -92,7 +91,7 @@ public class AppletFaceImpl implements AppletFace {
     IStoreService storeService;
 
     @Override
-    public Boolean isOpen(Long tableId) throws ProjectException{
+    public Boolean isOpen(Long tableId) throws ProjectException {
         try {
             //1、查询桌台信息，是否为使用中
             Table table = tableService.getById(tableId);
@@ -100,32 +99,63 @@ public class AppletFaceImpl implements AppletFace {
             //2、是否已经有【待支付、支付中】订单存在
             OrderVo orderVoResult = orderService.findOrderByTableId(tableId);
             Boolean flagOrderVo = !EmptyUtil.isNullOrEmpty(orderVoResult);
-            if (flagTableStatus||flagOrderVo){
+            if (flagTableStatus || flagOrderVo) {
                 return true;
             }
             return false;
-        }catch (Exception e){
+        } catch (Exception e) {
             log.error("查询桌台信息异常：{}", ExceptionsUtil.getStackTraceAsString(e));
             throw new ProjectException(TableEnum.SELECT_TABLE_FAIL);
         }
     }
 
     @Override
-    public AppletInfoVo findAppletInfoVoByTableId(Long tableId)throws ProjectException {
+    public AppletInfoVo findAppletInfoVoByTableId(Long tableId) throws ProjectException {
         try {
             //1、查询桌台信息
+            Table table = tableService.getById(tableId);
+            TableVo tableVo = BeanConv.toBean(table, TableVo.class);
             //2、查询门店
+            Store store = storeService.getById(table.getStoreId());
+            StoreVo storeVo = BeanConv.toBean(store, StoreVo.class);
             //3、查询品牌
+            Brand brand = brandService.getById(store.getBrandId());
+            BrandVo brandVo = BeanConv.toBean(brand, BrandVo.class);
             //3.1、处理品牌图片
+            List<AffixVo> affixVoListBrand = affixFace.findAffixVoByBusinessId(brandVo.getId());
+            brandVo.setAffixVo(affixVoListBrand.get(0));
             //4、查询分类
+            List<Category> categories = categoryService.findCategoryVoByStoreId(table.getStoreId());
+            List<CategoryVo> categoryVoList = BeanConv.toBeanList(categories, CategoryVo.class);
             //5、查询菜品
+            List<Dish> dishes = dishService.findDishVoByStoreId(table.getStoreId());
+            List<DishVo> dishVos = BeanConv.toBeanList(dishes, DishVo.class);
             //6、查询菜品口味、图片信息
+            dishVos.forEach(dishVo -> {
                 //6.1、口味与数字字典中间表信息
+                List<DishFlavor> dishFlavors = dishFlavorService.findDishFlavorByDishId(dishVo.getId());
+                List<DishFlavorVo> dishFlavorVos = BeanConv.toBeanList(dishFlavors, DishFlavorVo.class);
+                dishVo.setDishFlavorVos(dishFlavorVos);
                 //6.2、构建数字字典dataKeys
+                List<String> dataKeys = dishFlavorVos.stream()
+                        .map(DishFlavorVo::getDataKey)
+                        .collect(Collectors.toList());
                 //6.3、RPC查询数字字典口味信息
+                List<DataDictVo> valueByDataKeys = dataDictFace.findValueByDataKeys(dataKeys);
+                dishVo.setDataDictVos(valueByDataKeys);
                 //6.4、RPC查询附件信息
+                List<AffixVo> affixVoListDish = affixFace.findAffixVoByBusinessId(dishVo.getId());
+                dishVo.setAffixVo(affixVoListDish.get(0));
+            });
             //7、构建返回对象
-            return null;
+            AppletInfoVo appletInfoVo = AppletInfoVo.builder()
+                    .tableVo(tableVo)
+                    .storeVo(storeVo)
+                    .brandVo(brandVo)
+                    .categoryVos(categoryVoList)
+                    .dishVos(dishVos)
+                    .build();
+            return appletInfoVo;
         } catch (Exception e) {
             log.error("查询桌台相关主体信息异常：{}", ExceptionsUtil.getStackTraceAsString(e));
             throw new ProjectException(TableEnum.SELECT_TABLE_FAIL);
@@ -134,18 +164,59 @@ public class AppletFaceImpl implements AppletFace {
 
     @Override
     @Transactional
-    public OrderVo openTable(Long tableId,Integer personNumbers) throws ProjectException {
-        try{
+    public OrderVo openTable(Long tableId, Integer personNumbers) throws ProjectException {
         //1、开台状态定义
+        boolean flag = true;
         //2、锁定桌台，防止并发重复创建订单
+        String key = AppletCacheConstant.OPEN_TABLE_LOCK + tableId;
+        RLock lock = redissonClient.getLock(key);
+        try {
+            if (lock.tryLock(AppletCacheConstant.REDIS_WAIT_TIME,
+                    AppletCacheConstant.REDIS_LEASETIME,
+                    TimeUnit.MINUTES)) {
                 //3、幂等性：再次查询桌台订单情况
+                OrderVo orderVoResult = orderService.findOrderByTableId(tableId);
                 //4、未开台,为桌台创建当订单
+                if (EmptyUtil.isNullOrEmpty(orderVoResult)) {
                     //4.1、查询桌台信息
+                    Table table = tableService.getById(tableId);
                     //4.2、构建订单
+                    Order order = Order.builder()
+                            .tableId(tableId)
+                            .tableName(table.getTableName())
+                            .storeId(table.getStoreId())
+                            .areaId(table.getAreaId())
+                            .enterpriseId(table.getEnterpriseId())
+                            // 订单编号*** 雪花算法id
+                            .orderNo((Long) identifierGenerator.nextId(tableId))
+                            // 订单状态 DFK
+                            .orderState(TradingConstant.DFK)
+                            // 是否退款
+                            .isRefund(SuperConstant.NO)
+                            //退款金额
+                            .refund(new BigDecimal(0))
+                            //是否折扣
+                            .discount(new BigDecimal(10))
+                            //就餐人数
+                            .personNumbers(personNumbers)
+                            //优惠价格
+                            .reduce(new BigDecimal(0))
+                            //积分
+                            .useScore(0)
+                            //累计积分
+                            .acquireScore(0L)
+                            .build();
+                    orderService.save(order);
                     //5、修改桌台状态为使用中
+                    TableVo tableVo = TableVo.builder()
+                            .id(tableId)
+                            .tableStatus(SuperConstant.USE).build();
+                    tableService.updateTable(tableVo);
+                }
+            }
             //6、订单处理：处理可核算订单项和购物车订单项，可调用桌台订单显示接口
-            return null;
-        }catch (Exception e){
+            return showOrderVoforTable(tableId);
+        } catch (Exception e) {
             log.error("开桌操作异常：{}", ExceptionsUtil.getStackTraceAsString(e));
             throw new ProjectException(TableEnum.OPEN_TABLE_FAIL);
         }
@@ -158,7 +229,7 @@ public class AppletFaceImpl implements AppletFace {
             OrderVo orderVoResult = orderService.findOrderByTableId(tableId);
             //处理订单：可核算订单项目、购物车订单项目
             return handlerOrderVo(orderVoResult);
-        }catch (Exception e){
+        } catch (Exception e) {
             log.error("查询桌台订单信息异常：{}", ExceptionsUtil.getStackTraceAsString(e));
             throw new ProjectException(OrderEnum.SELECT_TABLE_ORDER_FAIL);
         }
@@ -172,7 +243,7 @@ public class AppletFaceImpl implements AppletFace {
      * @return
      */
     @Override
-    public OrderVo handlerOrderVo(OrderVo orderVo)throws ProjectException {
+    public OrderVo handlerOrderVo(OrderVo orderVo) throws ProjectException {
         if (!EmptyUtil.isNullOrEmpty(orderVo)) {
             //1、查询MySQL:可核算订单项
             List<OrderItem> orderItemList = orderItemService.findOrderItemByOrderNo(orderVo.getOrderNo());
@@ -182,9 +253,9 @@ public class AppletFaceImpl implements AppletFace {
             //2.1、处理空可核算订单项
             if (EmptyUtil.isNullOrEmpty(orderItemVoStatisticsList)) {
                 orderItemVoStatisticsList = new ArrayList<>();
-            }else {
-                orderItemVoStatisticsList.forEach(n->{
-                   n.setAffixVo(affixFace.findAffixVoByBusinessId(n.getDishId()).get(0));
+            } else {
+                orderItemVoStatisticsList.forEach(n -> {
+                    n.setAffixVo(affixFace.findAffixVoByBusinessId(n.getDishId()).get(0));
                 });
                 //2.2、计算可核算订单项总金额
                 reducePriceStatistics = reducePriceHandler(orderItemVoStatisticsList);
@@ -194,7 +265,7 @@ public class AppletFaceImpl implements AppletFace {
             RMapCache<Long, OrderItemVo> orderItemVoRMap = redissonClient.getMapCache(key);
             List<OrderItemVo> orderItemVoTemporaryList = (List<OrderItemVo>) orderItemVoRMap.readAllValues();
             //3.1、计算购物车订单项总金额
-            BigDecimal reducePriceTemporary=reducePriceHandler(orderItemVoTemporaryList);
+            BigDecimal reducePriceTemporary = reducePriceHandler(orderItemVoTemporaryList);
             //4、构建订单信息
             orderVo.setOrderItemVoStatisticsList(orderItemVoStatisticsList);
             orderVo.setReducePriceStatistics(reducePriceStatistics);
@@ -205,7 +276,7 @@ public class AppletFaceImpl implements AppletFace {
     }
 
     @Override
-    public BigDecimal reducePriceHandler(List<OrderItemVo> orderItemVos )throws ProjectException{
+    public BigDecimal reducePriceHandler(List<OrderItemVo> orderItemVos) throws ProjectException {
         return orderItemVos.stream().map(orderItemVo -> {
             BigDecimal price = orderItemVo.getPrice();
             BigDecimal reducePrice = orderItemVo.getReducePrice();
@@ -220,7 +291,7 @@ public class AppletFaceImpl implements AppletFace {
     }
 
     @Override
-    public DishVo findDishVoById(Long dishId)throws ProjectException {
+    public DishVo findDishVoById(Long dishId) throws ProjectException {
         try {
             //1、查询菜品,注意：菜品图片口味信息需要调用通用服务获得
             Dish dish = dishService.getById(dishId);
@@ -228,7 +299,7 @@ public class AppletFaceImpl implements AppletFace {
             List<DishFlavor> dishFlavors = dishFlavorService.findDishFlavorByDishId(dishId);
             DishVo dishVo = BeanConv.toBean(dish, DishVo.class);
             //3、处理菜品口味【数字字典】
-            List<DishFlavorVo> dishFlavorVos = BeanConv.toBeanList(dishFlavors,DishFlavorVo.class);
+            List<DishFlavorVo> dishFlavorVos = BeanConv.toBeanList(dishFlavors, DishFlavorVo.class);
             List<String> DataKeys = dishFlavorVos.stream()
                     .map(DishFlavorVo::getDataKey).collect(Collectors.toList());
             List<DataDictVo> valueByDataKeys = dataDictFace.findValueByDataKeys(DataKeys);
@@ -236,8 +307,8 @@ public class AppletFaceImpl implements AppletFace {
             //4、处理菜品图片
             List<AffixVo> affixVoListDish = affixFace.findAffixVoByBusinessId(dishVo.getId());
             dishVo.setAffixVo(affixVoListDish.get(0));
-            return dishVo ;
-        }catch (Exception e){
+            return dishVo;
+        } catch (Exception e) {
             log.error("查询菜品详情异常：{}", ExceptionsUtil.getStackTraceAsString(e));
             throw new ProjectException(DishEnum.SELECT_DISH_FAIL);
         }
@@ -258,12 +329,12 @@ public class AppletFaceImpl implements AppletFace {
             if (lockOrder.tryLock(
                     AppletCacheConstant.REDIS_WAIT_TIME,
                     AppletCacheConstant.REDIS_LEASETIME,
-                    TimeUnit.SECONDS)) {
+                    TimeUnit.MINUTES)) {
                 String keyDish = AppletCacheConstant.REPERTORY_DISH + dishId;
                 RAtomicLong atomicLong = redissonClient.getAtomicLong(keyDish);
                 //3.1、添加到购物车订单项
                 if (opertionType.equals(SuperConstant.OPERTION_TYPE_ADD)) {
-                    this.addToShoppingCart(dishId, orderNo,dishFlavor, atomicLong);
+                    this.addToShoppingCart(dishId, orderNo, dishFlavor, atomicLong);
                 }
                 //3.2、移除购物车订单项
                 if (opertionType.equals(SuperConstant.OPERTION_TYPE_REMOVE)) {
@@ -276,7 +347,7 @@ public class AppletFaceImpl implements AppletFace {
         } catch (InterruptedException e) {
             log.error("===编辑dishId：{}，orderNo：{}进入购物车加锁失败：{}",
                     dishId, orderNo, ExceptionsUtil.getStackTraceAsString(e));
-            throw  new ProjectException(OpenTableEnum.TRY_LOCK_FAIL);
+            throw new ProjectException(OpenTableEnum.TRY_LOCK_FAIL);
         } finally {
             lockOrder.unlock();
         }
@@ -293,7 +364,7 @@ public class AppletFaceImpl implements AppletFace {
     private void addToShoppingCart(Long dishId,
                                    Long orderNo,
                                    String dishFlavor,
-                                   RAtomicLong atomicLong)  {
+                                   RAtomicLong atomicLong) {
         //1、如果库存够，redis减库存
         if (atomicLong.decrementAndGet() >= 0) {
             //2、mysql菜品表库存
@@ -346,7 +417,7 @@ public class AppletFaceImpl implements AppletFace {
      * @return
      * @description 移除购物车订单项
      */
-    private void removeToShoppingCart(Long dishId, Long orderNo, RAtomicLong atomicLong)  {
+    private void removeToShoppingCart(Long dishId, Long orderNo, RAtomicLong atomicLong) {
         boolean flag = true;
         //1、菜品库存增加
         flag = dishService.updateDishNumber(1L, dishId);
@@ -381,7 +452,7 @@ public class AppletFaceImpl implements AppletFace {
      */
     private boolean intersection(boolean flag,
                                  List<OrderItemVo> orderItemVoStatisticsList,
-                                 List<OrderItemVo> orderItemVoTemporaryList){
+                                 List<OrderItemVo> orderItemVoTemporaryList) {
         //1、求交集
         List<OrderItemVo> listIntersection = new ArrayList<>();
         listIntersection.addAll(orderItemVoTemporaryList);
@@ -420,7 +491,7 @@ public class AppletFaceImpl implements AppletFace {
      */
     private Boolean difference(boolean flag,
                                List<OrderItemVo> orderItemVoStatisticsList,
-                               List<OrderItemVo> orderItemVoTemporaryList){
+                               List<OrderItemVo> orderItemVoTemporaryList) {
         //1、求差集
         List<OrderItemVo> listDifference = new ArrayList<>();
         listDifference.addAll(orderItemVoTemporaryList);
@@ -441,23 +512,23 @@ public class AppletFaceImpl implements AppletFace {
      * @return
      * @return: java.lang.Boolean
      */
-    private Boolean calculateOrderAmount(Long orderNo,OrderVo orderVoResult){
+    private Boolean calculateOrderAmount(Long orderNo, OrderVo orderVoResult) {
         //1、计算订单金额
         List<OrderItem> orderItemListResult = orderItemService
                 .findOrderItemByOrderNo(orderNo);
         BigDecimal sumPrice = orderItemListResult.stream()
-            .map(n -> {
-                    BigDecimal price = n.getPrice();
-                    BigDecimal reducePrice = n.getReducePrice();
-                    Long dishNum = n.getDishNum();
-                    //如果有优惠价格以优惠价格计算
-                    if (EmptyUtil.isNullOrEmpty(reducePrice)) {
-                        return price.multiply(new BigDecimal(dishNum));
-                    } else {
-                        return reducePrice.multiply(new BigDecimal(dishNum));
-                    }
-                }
-            ).reduce(BigDecimal.ZERO, BigDecimal::add);
+                .map(n -> {
+                            BigDecimal price = n.getPrice();
+                            BigDecimal reducePrice = n.getReducePrice();
+                            Long dishNum = n.getDishNum();
+                            //如果有优惠价格以优惠价格计算
+                            if (EmptyUtil.isNullOrEmpty(reducePrice)) {
+                                return price.multiply(new BigDecimal(dishNum));
+                            } else {
+                                return reducePrice.multiply(new BigDecimal(dishNum));
+                            }
+                        }
+                ).reduce(BigDecimal.ZERO, BigDecimal::add);
         //2、更新订单金额信息
         orderVoResult.setPayableAmountSum(sumPrice);
         OrderVo orderVoHandler = OrderVo.builder()
@@ -491,39 +562,39 @@ public class AppletFaceImpl implements AppletFace {
                     //3、查询购物车订单项
                     key = AppletCacheConstant.ORDERITEMVO_STATISTICS + orderNo;
                     RMapCache<Long, OrderItemVo> orderItemVoRMap = redissonClient.getMapCache(key);
-                    List<OrderItemVo> orderItemVoTemporaryList = (List<OrderItemVo>)orderItemVoRMap.readAllValues();
+                    List<OrderItemVo> orderItemVoTemporaryList = (List<OrderItemVo>) orderItemVoRMap.readAllValues();
                     //4、购物车订单项不为空才合并
                     if (!EmptyUtil.isNullOrEmpty(orderItemVoTemporaryList)) {
                         //5、求交集:购物车订单项与核算订单项合并
-                        flag = this.intersection(flag,orderItemVoStatisticsList,orderItemVoTemporaryList);
+                        flag = this.intersection(flag, orderItemVoStatisticsList, orderItemVoTemporaryList);
                         if (!flag) {
                             throw new ProjectException(OrderItemEnum.UPDATE_ORDERITEM_FAIL);
                         }
                         //6、求差集:保存购物车订单项到可核算订单项
-                        flag = this.difference(flag,orderItemVoStatisticsList,orderItemVoTemporaryList);
+                        flag = this.difference(flag, orderItemVoStatisticsList, orderItemVoTemporaryList);
                         if (!flag) {
                             throw new ProjectException(OrderItemEnum.UPDATE_ORDERITEM_FAIL);
                         }
                         //7、计算更新订单信息
-                        flag = this.calculateOrderAmount(orderNo,orderVoResult);
+                        flag = this.calculateOrderAmount(orderNo, orderVoResult);
                         if (!flag) {
                             throw new ProjectException(OrderItemEnum.SAVE_ORDER_FAIL);
                         }
                         //8、清理redis购物车订单项目
-                        orderItemVoTemporaryList.forEach(n->{
+                        orderItemVoTemporaryList.forEach(n -> {
                             orderItemVoRMap.remove(n.getDishId());
                         });
                     }
                 }
             } catch (InterruptedException e) {
-                log.error("合并订单出错：{}",ExceptionsUtil.getStackTraceAsString(e));
+                log.error("合并订单出错：{}", ExceptionsUtil.getStackTraceAsString(e));
                 throw new ProjectException(OrderItemEnum.LOCK_ORDER_FAIL);
             } finally {
                 lock.unlock();
             }
             //9、再次查询订单
             return handlerOrderVo(orderVoResult);
-        }catch (Exception e){
+        } catch (Exception e) {
             log.error("下单操作异常：{}", ExceptionsUtil.getStackTraceAsString(e));
             throw new ProjectException(OrderEnum.PLACE_ORDER_FAIL);
         }
@@ -550,40 +621,38 @@ public class AppletFaceImpl implements AppletFace {
                     if (flag) {
                         //4、修改桌台状态
                         tableService.updateTable(TableVo.builder()
-                            .id(targetTableId)
-                            .tableStatus(SuperConstant.USE)
-                            .build());
+                                .id(targetTableId)
+                                .tableStatus(SuperConstant.USE)
+                                .build());
                         tableService.updateTable(TableVo.builder()
-                            .id(sourceTableId)
-                            .tableStatus(SuperConstant.FREE)
-                            .build());
+                                .id(sourceTableId)
+                                .tableStatus(SuperConstant.FREE)
+                                .build());
                     } else {
                         throw new ProjectException(RotaryTableEnum.ROTARY_TABLE_FAIL);
                     }
-                //2.2桌台非空闲
+                    //2.2桌台非空闲
                 } else {
-                    throw  new ProjectException(RotaryTableEnum.ROTARY_TABLE_FAIL);
+                    throw new ProjectException(RotaryTableEnum.ROTARY_TABLE_FAIL);
                 }
             }
             return flag;
-        }
-        catch (Exception e){
+        } catch (Exception e) {
             log.error("操作购物车详情异常：{}", ExceptionsUtil.getStackTraceAsString(e));
             throw new ProjectException(TableEnum.ROTARY_TABLE_FAIL);
         }
     }
 
 
-
     @Override
-    public Boolean clearShoppingCart(Long orderNo) throws ProjectException{
+    public Boolean clearShoppingCart(Long orderNo) throws ProjectException {
         try {
             String key = AppletCacheConstant.ORDERITEMVO_STATISTICS + orderNo;
             RMapCache<Long, OrderItemVo> orderItemVoRMap = redissonClient.getMapCache(key);
             //清理购物车归还库存
-            if (!EmptyUtil.isNullOrEmpty(orderItemVoRMap)){
+            if (!EmptyUtil.isNullOrEmpty(orderItemVoRMap)) {
                 List<OrderItemVo> orderItemVos = (List<OrderItemVo>) orderItemVoRMap.readAllValues();
-                orderItemVos.forEach(n->{
+                orderItemVos.forEach(n -> {
                     String keyDish = AppletCacheConstant.REPERTORY_DISH + n.getDishId();
                     RAtomicLong atomicLong = redissonClient.getAtomicLong(keyDish);
                     atomicLong.incrementAndGet();
@@ -591,7 +660,7 @@ public class AppletFaceImpl implements AppletFace {
             }
             orderItemVoRMap.clear();
             return true;
-        }catch (Exception e){
+        } catch (Exception e) {
             log.error("操作购物车详情异常：{}", ExceptionsUtil.getStackTraceAsString(e));
             throw new ProjectException(OrderEnum.CLEAR_SHOPPING_CART_FAIL);
         }
