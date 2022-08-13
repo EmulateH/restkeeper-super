@@ -1,14 +1,10 @@
 package com.itheima.restkeeper.web;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.itheima.restkeeper.AffixFace;
 import com.itheima.restkeeper.StoreFace;
 import com.itheima.restkeeper.basic.ResponseWrap;
 import com.itheima.restkeeper.enums.StoreEnum;
-import com.itheima.restkeeper.exception.ProjectException;
 import com.itheima.restkeeper.req.StoreVo;
-import com.itheima.restkeeper.utils.EmptyUtil;
-import com.itheima.restkeeper.utils.ExceptionsUtil;
 import com.itheima.restkeeper.utils.ResponseWrapBuild;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -49,7 +45,8 @@ public class StoreController {
         @RequestBody StoreVo storeVo,
         @PathVariable("pageNum") int pageNum,
         @PathVariable("pageSize") int pageSize) {
-        return null;
+        Page<StoreVo> storeVoPage = storeFace.findStoreVoPage(storeVo, pageNum, pageSize);
+        return ResponseWrapBuild.build(StoreEnum.SUCCEED,storeVoPage);
     }
 
     /**
@@ -61,7 +58,8 @@ public class StoreController {
     @ApiOperation(value = "添加门店",notes = "添加门店")
     @ApiImplicitParam(name = "storeVo",value = "门店对象",required = true,dataType = "StoreVo")
     ResponseWrap<StoreVo> createStore(@RequestBody StoreVo storeVo) {
-        return null;
+        StoreVo storeVoResult = storeFace.createStore(storeVo);
+        return ResponseWrapBuild.build(StoreEnum.SUCCEED,storeVoResult);
     }
 
     /**
@@ -73,7 +71,8 @@ public class StoreController {
     @ApiOperation(value = "修改门店",notes = "修改门店")
     @ApiImplicitParam(name = "storeVo",value = "门店对象",required = true,dataType = "StoreVo")
     ResponseWrap<Boolean> updateStore(@RequestBody StoreVo storeVo) {
-        return null;
+        Boolean flag = storeFace.updateStore(storeVo);
+        return ResponseWrapBuild.build(StoreEnum.SUCCEED,flag);
     }
 
     /**
@@ -85,7 +84,9 @@ public class StoreController {
     @ApiOperation(value = "删除门店",notes = "删除门店")
     @ApiImplicitParam(name = "storeVo",value = "门店查询对象",required = true,dataType = "StoreVo")
     ResponseWrap<Boolean> deleteStore(@RequestBody StoreVo storeVo ) {
-        return null;
+        String[] checkedIds = storeVo.getCheckedIds();
+        Boolean flag = storeFace.deleteStore(checkedIds);
+        return ResponseWrapBuild.build(StoreEnum.SUCCEED,flag);
     }
 
     /**
@@ -97,7 +98,8 @@ public class StoreController {
     @ApiOperation(value = "查找门店",notes = "查找门店")
     @ApiImplicitParam(paramType = "path",name = "storeId",value = "门店Id",dataType = "Long")
     ResponseWrap<StoreVo> findStoreByStoreId(@PathVariable("storeId") Long storeId) {
-        return null;
+        StoreVo storeVo = storeFace.findStoreByStoreId(storeId);
+        return ResponseWrapBuild.build(StoreEnum.SUCCEED,storeVo);
     }
 
     /**
@@ -107,7 +109,8 @@ public class StoreController {
     @GetMapping("list")
     @ApiOperation(value = "查找门店列表",notes = "查找门店列表")
     ResponseWrap<List<StoreVo>> findStoreVoList() {
-        return null;
+        List<StoreVo> list = storeFace.findStoreVoList();
+        return ResponseWrapBuild.build(StoreEnum.SUCCEED,list);
     }
 
     /**
@@ -117,7 +120,8 @@ public class StoreController {
     @PostMapping("update-store-enableFlag")
     @ApiOperation(value = "修改门店状态",notes = "修改门店状态")
     ResponseWrap<Boolean> updateStoreEnableFlag(@RequestBody StoreVo storeVo) {
-        return null;
+        Boolean flag = storeFace.updateStore(storeVo);
+        return ResponseWrapBuild.build(StoreEnum.SUCCEED,flag);
     }
 
 }

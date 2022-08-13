@@ -20,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -41,6 +42,9 @@ public class UserController {
     @Autowired
     BCryptPasswordEncoder bCryptPasswordEncoder;
 
+    @Autowired
+    PasswordEncoder passwordEncoder;
+
     /**
      * @Description 用户列表
      * @param userVo 查询条件
@@ -59,7 +63,8 @@ public class UserController {
         @PathVariable("pageSize") int pageSize)
         throws ProjectException {
         try {
-            return null;
+            Page<UserVo> userVoPage = userFace.findUserVoPage(userVo, pageNum, pageSize);
+            return ResponseWrapBuild.build(UserEnum.SUCCEED,userVoPage);
         } catch (Exception e) {
             log.error("查询用户列表异常：{}", ExceptionsUtil.getStackTraceAsString(e));
             throw new ProjectException(UserEnum.PAGE_FAIL);
@@ -75,10 +80,11 @@ public class UserController {
     @ApiOperation(value = "注册用户",notes = "注册用户")
     @ApiImplicitParam(name = "userVo",value = "用户对象",required = true,dataType = "UserVo")
     ResponseWrap<UserVo> registerUser(@Validated(Create.class) @RequestBody UserVo userVo) throws ProjectException {
-
+        String plainPassword = userVo.getPassword();
         //必须要加{bcrypt}要不认证不通过
-
-        return null;
+        String password = passwordEncoder.encode(plainPassword);
+        userVo.setPassword(password);
+        return ResponseWrapBuild.build(UserEnum.SUCCEED,userFace.createUser(userVo));
     }
 
     /**
@@ -90,7 +96,8 @@ public class UserController {
     @ApiOperation(value = "修改用户",notes = "修改用户")
     @ApiImplicitParam(name = "userVo",value = "用户对象",required = true,dataType = "UserVo")
     ResponseWrap<Boolean> updateUser(@Validated(Update.class) @RequestBody UserVo userVo) throws ProjectException {
-        return null;
+        Boolean flag = userFace.updateUser(userVo);
+        return ResponseWrapBuild.build(UserEnum.SUCCEED,flag);
     }
 
     /**
@@ -102,7 +109,9 @@ public class UserController {
     @ApiOperation(value = "删除用户",notes = "删除用户")
     @ApiImplicitParam(name = "userVo",value = "用户查询对象",required = true,dataType = "UserVo")
     ResponseWrap<Boolean> deleteUser(@Validated(Delete.class) @RequestBody UserVo userVo ) throws ProjectException {
-        return null;
+         String[] checkedIds = userVo.getCheckedIds();
+        Boolean flag = userFace.deleteUser(checkedIds);
+        return ResponseWrapBuild.build(UserEnum.SUCCEED,flag);
     }
 
     /**
@@ -114,7 +123,8 @@ public class UserController {
     @ApiOperation(value = "查找用户",notes = "查找用户")
     @ApiImplicitParam(paramType = "path",name = "userId",value = "用户Id",example = "1",dataType = "Long")
     ResponseWrap<UserVo> findUserByUserId(@PathVariable("userId") Long userId) throws ProjectException {
-        return null;
+        UserVo userVo = userFace.findUserByUserId(userId);
+        return ResponseWrapBuild.build(UserEnum.SUCCEED,userVo);
     }
 
     /**
@@ -124,14 +134,16 @@ public class UserController {
     @GetMapping("select-list")
     @ApiOperation(value = "查找用户list",notes = "查找用户list")
     ResponseWrap<List<UserVo>> findUserVoList() throws ProjectException {
-        return null;
+        List<UserVo> userVoList = userFace.findUserVoList();
+        return ResponseWrapBuild.build(UserEnum.SUCCEED,userVoList);
     }
 
     @PostMapping("update-user-enableFlag")
     @ApiOperation(value = "修改用户状态",notes = "修改用户状态")
     @ApiImplicitParam(name = "userVo",value = "用户查询对象",required = true,dataType = "UserVo")
     ResponseWrap<Boolean> updateUserEnableFlag(@Validated(UpdateEnableFlag.class) @RequestBody UserVo userVo) throws ProjectException {
-        return null;
+        Boolean flag = userFace.updateUser(userVo);
+        return ResponseWrapBuild.build(UserEnum.SUCCEED,flag);
     }
 
     @PostMapping("rest-password")
@@ -139,7 +151,10 @@ public class UserController {
     @ApiImplicitParam(name = "userVo",value = "用户对象",required = true,dataType = "UserVo")
     ResponseWrap<Boolean> restPssword(@RequestBody UserVo userVo) throws ProjectException {
         //必须要加{bcrypt}要不认证不通过
-        return null;
+        String password = passwordEncoder.encode("88488");
+        userVo.setPassword(password);
+        Boolean flag = userFace.updateUser(userVo);
+        return ResponseWrapBuild.build(UserEnum.SUCCEED,flag);
     }
 
 }

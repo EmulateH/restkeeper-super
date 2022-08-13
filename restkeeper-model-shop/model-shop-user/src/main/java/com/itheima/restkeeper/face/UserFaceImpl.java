@@ -14,7 +14,6 @@ import com.itheima.restkeeper.service.IUserService;
 import com.itheima.restkeeper.utils.BeanConv;
 import com.itheima.restkeeper.utils.EmptyUtil;
 import com.itheima.restkeeper.utils.ExceptionsUtil;
-import com.itheima.restkeeper.utils.ResponseWrapBuild;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.apache.dubbo.config.annotation.DubboService;
@@ -30,15 +29,18 @@ import java.util.stream.Collectors;
  * @Description 用户dubbo服务实现
  */
 @Slf4j
-@DubboService(version = "${dubbo.application.version}",timeout = 5000,
-    methods ={
-        @Method(name = "findUserVoPage",retries = 2),
-        @Method(name = "createUser",retries = 0),
-        @Method(name = "updateUser",retries = 0),
-        @Method(name = "deleteUser",retries = 0)
-    })
+@DubboService(version = "${dubbo.application.version}", timeout = 5000,
+        methods = {
+                @Method(name = "findUserVoPage", retries = 2),
+                @Method(name = "createUser", retries = 0),
+                @Method(name = "updateUser", retries = 0),
+                @Method(name = "deleteUser", retries = 0)
+        })
 public class UserFaceImpl implements UserFace {
 
+
+    @DubboReference(version = "${dubbo.application.version}", check = false)
+    AffixFace affixFace;
 
     @Autowired
     IUserService userService;
@@ -49,13 +51,35 @@ public class UserFaceImpl implements UserFace {
     @Override
     public Page<UserVo> findUserVoPage(UserVo userVo,
                                        int pageNum,
-                                       int pageSize)throws ProjectException {
+                                       int pageSize) throws ProjectException {
         try {
             //执行查询
+            Page<User> page = userService.findUserVoPage(userVo, pageNum, pageSize);
+            Page<UserVo> pageVo = new Page<>();
+            BeanConv.toBean(page, pageVo);
             //结果集转换
+            List<User> userList = page.getRecords();
+            List<UserVo> userVoList = BeanConv.toBeanList(userList, UserVo.class);
+            if (!EmptyUtil.isNullOrEmpty(userList)) {
+                userVoList.forEach(n -> {
                     //处理附件
+                    List<AffixVo> affixVoList = affixFace.findAffixVoByBusinessId(n.getId());
+                    if (!EmptyUtil.isNullOrEmpty(affixVoList)) {
+                        n.setAffixVo(affixVoList.get(0));
+                    }
                     //处理角色
-            return null;
+                    List<Role> roles = userAdapterService.findRoleByUserId(n.getId());
+                    ArrayList<String> roleIdList = new ArrayList<>();
+                    for (Role role : roles) {
+                        roleIdList.add(String.valueOf(role.getId()));
+                    }
+                    String[] roleIds = new String[roleIdList.size()];
+                    roleIdList.toArray(roleIds);
+                    n.setHasRoleIds(roleIds);
+                });
+            }
+            pageVo.setRecords(userVoList);
+            return pageVo;
         } catch (Exception e) {
             log.error("查询用户列表异常：{}", ExceptionsUtil.getStackTraceAsString(e));
             throw new ProjectException(UserEnum.PAGE_FAIL);
@@ -63,13 +87,26 @@ public class UserFaceImpl implements UserFace {
     }
 
     @Override
-    public UserVo createUser(UserVo userVo)throws ProjectException {
+    public UserVo createUser(UserVo userVo) throws ProjectException {
         try {
             //保存用户
+            User user = userService.createUser(userVo);
+            UserVo userVoResult = BeanConv.toBean(user, UserVo.class);
             //绑定附件
+            if (!EmptyUtil.isNullOrEmpty(userVoResult)) {
+                affixFace.bindBusinessId(AffixVo.builder()
+                        .businessId(userVoResult.getId())
+                        .id(userVo.getAffixVo().getId())
+                        .build());
+            }
             //数据回显
+            userVoResult.setAffixVo(AffixVo.builder()
+                    .pathUrl(userVo.getAffixVo().getPathUrl())
+                    .businessId(userVoResult.getId())
+                    .id(userVo.getAffixVo().getId()).build());
             //处理角色
-            return null;
+            userVoResult.setHasRoleIds(userVo.getHasRoleIds());
+            return userVoResult;
         } catch (Exception e) {
             log.error("保存用户异常：{}", ExceptionsUtil.getStackTraceAsString(e));
             throw new ProjectException(UserEnum.CREATE_FAIL);
@@ -77,12 +114,27 @@ public class UserFaceImpl implements UserFace {
     }
 
     @Override
-    public Boolean updateUser(UserVo userVo) throws ProjectException{
+    public Boolean updateUser(UserVo userVo) throws ProjectException {
         try {
             //执行修改
+            Boolean flag = userService.updateUser(userVo);
+            if (flag) {
+                List<AffixVo> affixVoByList = affixFace.findAffixVoByBusinessId(userVo.getId());
+
+                List<Long> affixIds = affixVoByList.stream()
+                        .map(AffixVo::getId)
+                        .collect(Collectors.toList());
+                if (!affixIds.contains(userVo.getAffixVo().getId())){
                     //删除图片
+                    flag = affixFace.deleteAffixVoByBusinessId(userVo.getId());
                     //绑定新图片
-            return null;
+                    affixFace.bindBusinessId(AffixVo.builder()
+                            .businessId(userVo.getId())
+                            .id(userVo.getAffixVo().getId())
+                            .build());
+                }
+            }
+            return flag;
         } catch (Exception e) {
             log.error("保存用户异常：{}", ExceptionsUtil.getStackTraceAsString(e));
             throw new ProjectException(UserEnum.UPDATE_FAIL);
@@ -90,11 +142,17 @@ public class UserFaceImpl implements UserFace {
     }
 
     @Override
-    public Boolean deleteUser(String[] checkedIds)throws ProjectException {
+    public Boolean deleteUser(String[] checkedIds) throws ProjectException {
         try {
             //执行删除
+            Boolean flag = userService.deleteUser(checkedIds);
+            if (flag){
                 //删除图片
-            return null;
+                for (String checkedId : checkedIds) {
+                    affixFace.deleteAffixVoByBusinessId(Long.valueOf(checkedId));
+                }
+            }
+            return flag;
         } catch (Exception e) {
             log.error("删除用户异常：{}", ExceptionsUtil.getStackTraceAsString(e));
             throw new ProjectException(UserEnum.DELETE_FAIL);
@@ -102,8 +160,12 @@ public class UserFaceImpl implements UserFace {
     }
 
     @Override
-    public UserVo findUserByUserId(Long userId)throws ProjectException {
+    public UserVo findUserByUserId(Long userId) throws ProjectException {
         try {
+            User user = userService.getById(userId);
+            if (!EmptyUtil.isNullOrEmpty(user)){
+                return BeanConv.toBean(user,UserVo.class);
+            }
             return null;
         } catch (Exception e) {
             log.error("查找用户所有角色异常：{}", ExceptionsUtil.getStackTraceAsString(e));
@@ -112,9 +174,9 @@ public class UserFaceImpl implements UserFace {
     }
 
     @Override
-    public List<UserVo> findUserVoList()throws ProjectException {
+    public List<UserVo> findUserVoList() throws ProjectException {
         try {
-            return null;
+            return BeanConv.toBeanList(userService.findUserVoList(),UserVo.class);
         } catch (Exception e) {
             log.error("查找用户list异常：{}", ExceptionsUtil.getStackTraceAsString(e));
             throw new ProjectException(UserEnum.SELECT_USER_LIST_FAIL);
