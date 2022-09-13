@@ -4,10 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.itheima.restkeeper.TableAreaFace;
 import com.itheima.restkeeper.basic.ResponseWrap;
 import com.itheima.restkeeper.enums.TableAreaEnum;
-import com.itheima.restkeeper.exception.ProjectException;
 import com.itheima.restkeeper.req.TableAreaVo;
-import com.itheima.restkeeper.utils.EmptyUtil;
-import com.itheima.restkeeper.utils.ExceptionsUtil;
 import com.itheima.restkeeper.utils.ResponseWrapBuild;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -15,7 +12,6 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.dubbo.config.annotation.DubboReference;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -49,7 +45,8 @@ public class TableAreaController {
         @RequestBody TableAreaVo tableAreaVo,
         @PathVariable("pageNum") int pageNum,
         @PathVariable("pageSize") int pageSize) {
-        return null;
+        Page<TableAreaVo> tableAreaVoPage = tableAreaFace.findTableAreaVoPage(tableAreaVo, pageNum, pageSize);
+        return ResponseWrapBuild.build(TableAreaEnum.SUCCEED,tableAreaVoPage);
     }
 
     /**
@@ -61,7 +58,8 @@ public class TableAreaController {
     @ApiOperation(value = "添加区域",notes = "添加区域")
     @ApiImplicitParam(name = "tableAreaVo",value = "区域对象",required = true,dataType = "TableAreaVo")
     ResponseWrap<TableAreaVo> createTableArea(@RequestBody TableAreaVo tableAreaVo) {
-        return null;
+        TableAreaVo tableArea = tableAreaFace.createTableArea(tableAreaVo);
+        return ResponseWrapBuild.build(TableAreaEnum.SUCCEED,tableArea);
     }
 
     /**
@@ -73,7 +71,8 @@ public class TableAreaController {
     @ApiOperation(value = "修改区域",notes = "修改区域")
     @ApiImplicitParam(name = "tableAreaVo",value = "区域对象",required = true,dataType = "TableAreaVo")
     ResponseWrap<Boolean> updateTableArea(@RequestBody TableAreaVo tableAreaVo) {
-        return null;
+        Boolean flag = tableAreaFace.updateTableArea(tableAreaVo);
+        return ResponseWrapBuild.build(TableAreaEnum.SUCCEED,flag);
     }
 
     /**
@@ -86,7 +85,9 @@ public class TableAreaController {
     @ApiImplicitParam(name = "tableAreaVo",value = "区域查询对象",required = true,dataType = "TableAreaVo")
     ResponseWrap<Boolean> deleteTableArea(@RequestBody TableAreaVo tableAreaVo ) {
         //获得所有选择的区域IDS
-        return null;
+        String[] checkedIds = tableAreaVo.getCheckedIds();
+        Boolean flag = tableAreaFace.deleteTableArea(checkedIds);
+        return ResponseWrapBuild.build(TableAreaEnum.SUCCEED,flag);
     }
 
     /**
@@ -98,7 +99,8 @@ public class TableAreaController {
     @ApiOperation(value = "查找区域",notes = "查找区域")
     @ApiImplicitParam(paramType = "path",name = "tableAreaId",value = "区域Id",example = "1",dataType = "Long")
     ResponseWrap<TableAreaVo> findTableAreaByTableAreaId(@PathVariable("tableAreaId") Long tableAreaId) {
-        return null;
+        TableAreaVo tableAreaVo = tableAreaFace.findTableAreaByTableAreaId(tableAreaId);
+        return ResponseWrapBuild.build(TableAreaEnum.SUCCEED,tableAreaVo);
     }
 
     /**
@@ -108,12 +110,14 @@ public class TableAreaController {
     @GetMapping("list")
     @ApiOperation(value = "查找区域列表",notes = "查找区域列表")
     ResponseWrap<List<TableAreaVo>> findTableAreaVoList() {
-        return null;
+        List<TableAreaVo> tableAreaVoList = tableAreaFace.findTableAreaVoList();
+        return ResponseWrapBuild.build(TableAreaEnum.SUCCEED,tableAreaVoList);
     }
 
     @PostMapping("update-tableArea-enableFlag")
     @ApiOperation(value = "修改区域状态",notes = "修改区域状态")
     ResponseWrap<Boolean> updateTableAreaEnableFlag(@RequestBody TableAreaVo tableAreaVo) {
-        return null;
+        Boolean flag = tableAreaFace.updateTableArea(tableAreaVo);
+        return ResponseWrapBuild.build(TableAreaEnum.SUCCEED,flag);
     }
 }

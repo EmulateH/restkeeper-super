@@ -22,13 +22,13 @@ import java.util.List;
  * @Description 桌台区域dubbo服务
  */
 @Slf4j
-@DubboService(version = "${dubbo.application.version}",timeout = 5000,
-    methods ={
-        @Method(name = "findTableAreaVoPage",retries = 2),
-        @Method(name = "createTableArea",retries = 0),
-        @Method(name = "updateTableArea",retries = 0),
-        @Method(name = "deleteTableArea",retries = 0)
-    })
+@DubboService(version = "${dubbo.application.version}", timeout = 5000,
+        methods = {
+                @Method(name = "findTableAreaVoPage", retries = 2),
+                @Method(name = "createTableArea", retries = 0),
+                @Method(name = "updateTableArea", retries = 0),
+                @Method(name = "deleteTableArea", retries = 0)
+        })
 public class TableAreaFaceImpl implements TableAreaFace {
 
     @Autowired
@@ -37,24 +37,29 @@ public class TableAreaFaceImpl implements TableAreaFace {
     @Override
     public Page<TableAreaVo> findTableAreaVoPage(TableAreaVo tableAreaVo,
                                                  int pageNum,
-                                                 int pageSize)throws ProjectException {
+                                                 int pageSize) throws ProjectException {
         try {
             //查询区域分页
+            Page<TableArea> page = tableAreaService.findTableAreaVoPage(tableAreaVo, pageNum, pageSize);
+            Page<TableAreaVo> pageVo = new Page<>();
+            BeanConv.toBean(page, pageVo);
             //结果集转换
+            List<TableArea> tableAreaList = page.getRecords();
+            List<TableAreaVo> tableAreaVoList = BeanConv.toBeanList(tableAreaList, TableAreaVo.class);
+            pageVo.setRecords(tableAreaVoList);
             //返回结果
-            return null;
+            return pageVo;
         } catch (Exception e) {
             log.error("查询区域列表异常：{}", ExceptionsUtil.getStackTraceAsString(e));
             throw new ProjectException(TableAreaEnum.PAGE_FAIL);
         }
-
     }
 
     @Override
-    public TableAreaVo createTableArea(TableAreaVo tableAreaVo) throws ProjectException{
+    public TableAreaVo createTableArea(TableAreaVo tableAreaVo) throws ProjectException {
         try {
             //创建区域
-            return null;
+            return BeanConv.toBean(tableAreaService.createTableArea(tableAreaVo),TableAreaVo.class);
         } catch (Exception e) {
             log.error("保存区域异常：{}", ExceptionsUtil.getStackTraceAsString(e));
             throw new ProjectException(TableAreaEnum.CREATE_FAIL);
@@ -62,10 +67,10 @@ public class TableAreaFaceImpl implements TableAreaFace {
     }
 
     @Override
-    public Boolean updateTableArea(TableAreaVo tableAreaVo) throws ProjectException{
+    public Boolean updateTableArea(TableAreaVo tableAreaVo) throws ProjectException {
         try {
             //修改区域
-            return null;
+            return tableAreaService.updateTableArea(tableAreaVo);
         } catch (Exception e) {
             log.error("保存区域异常：{}", ExceptionsUtil.getStackTraceAsString(e));
             throw new ProjectException(TableAreaEnum.UPDATE_FAIL);
@@ -73,10 +78,10 @@ public class TableAreaFaceImpl implements TableAreaFace {
     }
 
     @Override
-    public Boolean deleteTableArea(String[] checkedIds)throws ProjectException {
+    public Boolean deleteTableArea(String[] checkedIds) throws ProjectException {
         try {
             //删除区域
-            return null;
+            return tableAreaService.deleteTableArea(checkedIds);
         } catch (Exception e) {
             log.error("删除区域异常：{}", ExceptionsUtil.getStackTraceAsString(e));
             throw new ProjectException(TableAreaEnum.DELETE_FAIL);
@@ -84,9 +89,13 @@ public class TableAreaFaceImpl implements TableAreaFace {
     }
 
     @Override
-    public TableAreaVo findTableAreaByTableAreaId(Long tableAreaId)throws ProjectException {
+    public TableAreaVo findTableAreaByTableAreaId(Long tableAreaId) throws ProjectException {
         try {
             //按id查询区域
+            TableArea tableArea = tableAreaService.getById(tableAreaId);
+            if (!EmptyUtil.isNullOrEmpty(tableArea)){
+                return BeanConv.toBean(tableArea,TableAreaVo.class);
+            }
             return null;
         } catch (Exception e) {
             log.error("查找区域所有区域异常：{}", ExceptionsUtil.getStackTraceAsString(e));
@@ -95,10 +104,11 @@ public class TableAreaFaceImpl implements TableAreaFace {
     }
 
     @Override
-    public List<TableAreaVo> findTableAreaVoList()throws ProjectException {
+    public List<TableAreaVo> findTableAreaVoList() throws ProjectException {
         try {
             //查询区域
-            return null;
+            List<TableArea> tableAreaVoList = tableAreaService.findTableAreaVoList();
+            return BeanConv.toBeanList(tableAreaVoList,TableAreaVo.class);
         } catch (Exception e) {
             log.error("查找区域所有区域异常：{}", ExceptionsUtil.getStackTraceAsString(e));
             throw new ProjectException(TableAreaEnum.SELECT_AREA_LIST_FAIL);

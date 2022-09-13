@@ -4,10 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.itheima.restkeeper.TableFace;
 import com.itheima.restkeeper.basic.ResponseWrap;
 import com.itheima.restkeeper.enums.TableEnum;
-import com.itheima.restkeeper.exception.ProjectException;
 import com.itheima.restkeeper.req.TableVo;
-import com.itheima.restkeeper.utils.EmptyUtil;
-import com.itheima.restkeeper.utils.ExceptionsUtil;
 import com.itheima.restkeeper.utils.ResponseWrapBuild;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -48,7 +45,8 @@ public class TableController {
         @RequestBody TableVo tableVo,
         @PathVariable("pageNum") int pageNum,
         @PathVariable("pageSize") int pageSize) {
-        return null;
+        Page<TableVo> tableVoList = tableFace.findTableVoPage(tableVo, pageNum, pageSize);
+        return ResponseWrapBuild.build(TableEnum.SUCCEED,tableVoList);
     }
 
     /**
@@ -60,7 +58,8 @@ public class TableController {
     @ApiOperation(value = "添加桌台",notes = "添加桌台")
     @ApiImplicitParam(name = "tableVo",value = "桌台对象",required = true,dataType = "TableVo")
     ResponseWrap<TableVo> createTable(@RequestBody TableVo tableVo) {
-        return null;
+        TableVo tableVoResult = tableFace.createTable(tableVo);
+        return ResponseWrapBuild.build(TableEnum.SUCCEED,tableVoResult);
     }
 
     /**
@@ -72,7 +71,8 @@ public class TableController {
     @ApiOperation(value = "修改桌台",notes = "修改桌台")
     @ApiImplicitParam(name = "tableVo",value = "桌台对象",required = true,dataType = "TableVo")
     ResponseWrap<Boolean> updateTable(@RequestBody TableVo tableVo) {
-        return null;
+        Boolean flag = tableFace.updateTable(tableVo);
+        return ResponseWrapBuild.build(TableEnum.SUCCEED,flag);
     }
 
     /**
@@ -84,7 +84,8 @@ public class TableController {
     @ApiOperation(value = "查找桌台",notes = "查找桌台")
     @ApiImplicitParam(paramType = "path",name = "tableId",value = "桌台Id",dataType = "Long")
     ResponseWrap<TableVo> findTableByTableId(@PathVariable("tableId") Long tableId) {
-        return null;
+        TableVo tableVo = tableFace.findTableByTableId(tableId);
+        return ResponseWrapBuild.build(TableEnum.SUCCEED,tableVo);
     }
 
     /**
@@ -97,7 +98,9 @@ public class TableController {
     @ApiImplicitParam(name = "tableVo",value = "桌台查询对象",required = true,dataType = "TableVo")
     ResponseWrap<Boolean> deleteTable(@RequestBody TableVo tableVo ) {
         //拿到选中桌台的IDS
-        return null;
+        String[] checkedIds = tableVo.getCheckedIds();
+        Boolean flag = tableFace.deleteTable(checkedIds);
+        return ResponseWrapBuild.build(TableEnum.SUCCEED,flag);
     }
 
     /**
@@ -107,18 +110,21 @@ public class TableController {
     @GetMapping("list")
     @ApiOperation(value = "查找桌台列表",notes = "查找桌台列表")
     ResponseWrap<List<TableVo>> findTableVoList() {
-        return null;
+        List<TableVo> list = tableFace.findTableVoList();
+        return ResponseWrapBuild.build(TableEnum.SUCCEED,list);
     }
 
     @PostMapping("update-table-enableFlag")
     @ApiOperation(value = "修改桌台有效状态",notes = "修改桌台有效状态")
     ResponseWrap<Boolean> updateTableEnableFlag(@RequestBody TableVo tableVo) {
-        return null;
+        Boolean flag = tableFace.updateTable(tableVo);
+        return ResponseWrapBuild.build(TableEnum.SUCCEED,flag);
     }
 
     @PostMapping("update-table-tableStatus")
     @ApiOperation(value = "修改桌台状态",notes = "修改桌台状态")
     ResponseWrap<Boolean> updateTableStatus(@RequestBody TableVo tableVo) {
-        return null;
+        Boolean flag = tableFace.updateTable(tableVo);
+        return ResponseWrapBuild.build(TableEnum.SUCCEED,flag);
     }
 }

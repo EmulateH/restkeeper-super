@@ -4,7 +4,6 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.itheima.restkeeper.CategoryFace;
 import com.itheima.restkeeper.basic.ResponseWrap;
 import com.itheima.restkeeper.enums.CategoryEnum;
-import com.itheima.restkeeper.exception.ProjectException;
 import com.itheima.restkeeper.req.CategoryVo;
 import com.itheima.restkeeper.utils.ResponseWrapBuild;
 import io.swagger.annotations.Api;
@@ -38,15 +37,16 @@ public class CategoryController {
     @PostMapping("page/{pageNum}/{pageSize}")
     @ApiOperation(value = "查询分类分页",notes = "查询分类分页")
     @ApiImplicitParams({
-        @ApiImplicitParam(name = "categoryVo",value = "分类查询对象",required = false,dataType = "CategoryVo"),
-        @ApiImplicitParam(paramType = "path",name = "pageNum",value = "页码",dataType = "Integer"),
-        @ApiImplicitParam(paramType = "path",name = "pageSize",value = "每页条数",dataType = "Integer")
+            @ApiImplicitParam(name = "categoryVo",value = "分类查询对象",required = false,dataType = "CategoryVo"),
+            @ApiImplicitParam(paramType = "path",name = "pageNum",value = "页码",dataType = "Integer"),
+            @ApiImplicitParam(paramType = "path",name = "pageSize",value = "每页条数",dataType = "Integer")
     })
     public ResponseWrap<Page<CategoryVo>> findCategoryVoPage(
-        @RequestBody CategoryVo categoryVo,
-        @PathVariable("pageNum") int pageNum,
-        @PathVariable("pageSize") int pageSize) {
-        return null;
+            @RequestBody CategoryVo categoryVo,
+            @PathVariable("pageNum") int pageNum,
+            @PathVariable("pageSize") int pageSize) {
+        Page<CategoryVo> categoryVoPage = categoryFace.findCategoryVoPage(categoryVo, pageNum, pageSize);
+        return ResponseWrapBuild.build(CategoryEnum.SUCCEED,categoryVoPage);
     }
 
     /**
@@ -58,7 +58,8 @@ public class CategoryController {
     @ApiOperation(value = "添加分类",notes = "添加分类")
     @ApiImplicitParam(name = "categoryVo",value = "分类对象",required = true,dataType = "CategoryVo")
     ResponseWrap<CategoryVo> createCategory(@RequestBody CategoryVo categoryVo) {
-        return null;
+        CategoryVo categoryVoResult = categoryFace.createCategory(categoryVo);
+        return ResponseWrapBuild.build(CategoryEnum.SUCCEED,categoryVoResult);
     }
 
     /**
@@ -70,7 +71,8 @@ public class CategoryController {
     @ApiOperation(value = "修改分类",notes = "修改分类")
     @ApiImplicitParam(name = "categoryVo",value = "分类对象",required = true,dataType = "CategoryVo")
     ResponseWrap<Boolean> updateCategory(@RequestBody CategoryVo categoryVo) {
-        return null;
+        Boolean flag = categoryFace.updateCategory(categoryVo);
+        return ResponseWrapBuild.build(CategoryEnum.SUCCEED,flag);
     }
 
     /**
@@ -83,7 +85,9 @@ public class CategoryController {
     @ApiImplicitParam(name = "categoryVo",value = "分类查询对象",required = true,dataType = "CategoryVo")
     ResponseWrap<Boolean> deleteCategory(@RequestBody CategoryVo categoryVo ) {
         //获得所有选择分类IDS
-        return null;
+        String[] checkedIds = categoryVo.getCheckedIds();
+        Boolean flag = categoryFace.deleteCategory(checkedIds);
+        return ResponseWrapBuild.build(CategoryEnum.SUCCEED,flag);
     }
 
     /**
@@ -95,7 +99,8 @@ public class CategoryController {
     @ApiOperation(value = "查找分类",notes = "查找分类")
     @ApiImplicitParam(paramType = "path",name = "categoryId",value = "分类Id",dataType = "Long")
     ResponseWrap<CategoryVo> findCategoryByCategoryId(@PathVariable("categoryId") Long categoryId) {
-        return null;
+        CategoryVo categoryVo = categoryFace.findCategoryByCategoryId(categoryId);
+        return ResponseWrapBuild.build(CategoryEnum.SUCCEED,categoryVo);
     }
 
     /**
@@ -105,13 +110,15 @@ public class CategoryController {
     @GetMapping("list")
     @ApiOperation(value = "查找分类列表",notes = "查找分类列表")
     ResponseWrap<List<CategoryVo>> findCategoryVoList() {
-        return null;
+        List<CategoryVo> list = categoryFace.findCategoryVoList();
+        return ResponseWrapBuild.build(CategoryEnum.SUCCEED,list);
     }
 
 
     @PostMapping("update-category-enableFlag")
     @ApiOperation(value = "修改分类状态",notes = "修改分类状态")
     ResponseWrap<Boolean> updateCategoryEnableFlag(@RequestBody CategoryVo categoryVo) {
-        return null;
+        Boolean flag = categoryFace.updateCategory(categoryVo);
+        return ResponseWrapBuild.build(CategoryEnum.SUCCEED,flag);
     }
 }
